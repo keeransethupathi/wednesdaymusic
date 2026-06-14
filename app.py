@@ -4,20 +4,20 @@ import music_manager
 
 # Page configurations
 st.set_page_config(
-    page_title="YouTube Music Connect",
+    page_title="JioSaavn Connect",
     page_icon="🎵",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom Spotify-style dark mode styling and fixed bottom player iframe positioning
+# Custom JioSaavn-style glassmorphic dark mode styling and bottom player iframe positioning
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap');
     
     html, body, [class*="css"], .stApp {
         font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
-        background-color: #121212 !important; /* Spotify Main Gray */
+        background-color: #0b0f19 !important; /* JioSaavn Slate Blue */
         color: #ffffff !important;
     }
 
@@ -25,14 +25,14 @@ st.markdown("""
     footer {visibility: hidden;}
     header {visibility: hidden;}
 
-    /* Sidebar Spotify branding */
+    /* Sidebar JioSaavn branding */
     section[data-testid="stSidebar"] {
-        background-color: #000000 !important; /* Spotify Sidebar Dark */
-        border-right: 1px solid #282828 !important;
+        background-color: #070a13 !important; /* Sidebar Dark Slate */
+        border-right: 1px solid #1a2235 !important;
         padding-top: 10px;
     }
 
-    /* Padding to avoid layout overlapping with player */
+    /* Padding to avoid layout overlapping */
     div.block-container {
         padding-top: 30px !important;
     }
@@ -42,19 +42,20 @@ st.markdown("""
         display: flex;
         align-items: center;
         padding: 10px 16px;
-        border-radius: 6px;
-        background-color: #181818;
-        border: 1px solid #282828;
+        border-radius: 8px;
+        background-color: #111827;
+        border: 1px solid #1a2235;
         margin-bottom: 8px;
-        transition: background-color 0.2s;
+        transition: background-color 0.2s, border-color 0.2s;
     }
     .track-row:hover {
-        background-color: #282828;
+        background-color: #1f2937;
+        border-color: #00d2c4;
     }
     .track-image {
         width: 50px;
         height: 50px;
-        border-radius: 4px;
+        border-radius: 6px;
         object-fit: cover;
         margin-right: 16px;
     }
@@ -73,7 +74,7 @@ st.markdown("""
     }
     .track-artist {
         font-size: 13px;
-        color: #b3b3b3;
+        color: #9ca3af;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -81,25 +82,26 @@ st.markdown("""
     
     /* Album cards grid */
     .album-card {
-        background-color: #181818;
-        border: 1px solid #282828;
-        border-radius: 8px;
+        background-color: #111827;
+        border: 1px solid #1a2235;
+        border-radius: 10px;
         padding: 16px;
         text-align: center;
-        transition: background-color 0.3s, transform 0.2s;
+        transition: background-color 0.3s, transform 0.2s, border-color 0.2s;
         cursor: pointer;
     }
     .album-card:hover {
-        background-color: #282828;
+        background-color: #1f2937;
+        border-color: #00d2c4;
         transform: translateY(-4px);
     }
     .album-image {
         width: 100%;
         aspect-ratio: 1;
-        border-radius: 6px;
+        border-radius: 8px;
         object-fit: cover;
         margin-bottom: 12px;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.4);
     }
     .album-title {
         font-size: 14px;
@@ -123,36 +125,36 @@ st.markdown("""
         width: 110px;
         height: 110px;
         border-radius: 50%;
-        background: radial-gradient(circle, #1db954 30%, #191414 100%);
-        box-shadow: 0 0 20px #1db954;
+        background: radial-gradient(circle, #00d2c4 30%, #070a13 100%);
+        box-shadow: 0 0 20px #00d2c4;
         animation: pulse-visual 1.8s infinite ease-in-out;
     }
     @keyframes pulse-visual {
         0% {
             transform: scale(0.95);
-            box-shadow: 0 0 10px rgba(29, 185, 84, 0.5);
+            box-shadow: 0 0 10px rgba(0, 210, 196, 0.5);
         }
         50% {
             transform: scale(1.08);
-            box-shadow: 0 0 35px rgba(29, 185, 84, 0.9);
+            box-shadow: 0 0 35px rgba(0, 210, 196, 0.9);
         }
         100% {
             transform: scale(0.95);
-            box-shadow: 0 0 10px rgba(29, 185, 84, 0.5);
+            box-shadow: 0 0 10px rgba(0, 210, 196, 0.5);
         }
     }
 
     /* Custom styles for Streamlit buttons in sidebar */
     .stButton>button {
-        background-color: #282828 !important;
+        background-color: #1f2937 !important;
         color: #ffffff !important;
-        border: 1px solid #282828 !important;
+        border: 1px solid #1a2235 !important;
         border-radius: 20px !important;
         transition: all 0.2s !important;
     }
     .stButton>button:hover {
-        background-color: #3e3e3e !important;
-        border-color: #ffffff !important;
+        background-color: #374151 !important;
+        border-color: #00d2c4 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -177,7 +179,7 @@ if "is_playing" not in st.session_state:
 def play_track(track):
     """Set the active track and push the previous track to history."""
     if st.session_state.current_track:
-        if not st.session_state.history or st.session_state.history[-1]["video_id"] != st.session_state.current_track["video_id"]:
+        if not st.session_state.history or st.session_state.history[-1]["track_id"] != st.session_state.current_track["track_id"]:
             st.session_state.history.append(st.session_state.current_track)
             if len(st.session_state.history) > 50:
                 st.session_state.history.pop(0)
@@ -210,10 +212,10 @@ def skip_prev_track():
         st.toast("No previous tracks in history.")
 
 # --- SIDEBAR Layout ---
-st.sidebar.markdown("<h2 style='color:#1db954; font-weight:800; margin-bottom:15px; text-align:center;'>🎵 YT MUSIC</h2>", unsafe_allow_html=True)
+st.sidebar.markdown("<h2 style='color:#00d2c4; font-weight:800; margin-bottom:15px; text-align:center;'>🎵 JIOSAAVN</h2>", unsafe_allow_html=True)
 
 # 1. Search Bar at the VERY TOP of the sidebar aligned side-by-side using columns
-st.sidebar.markdown("<p style='color:#b3b3b3; font-size:0.75rem; font-weight:700; margin-left:5px;'>SEARCH CATALOG</p>", unsafe_allow_html=True)
+st.sidebar.markdown("<p style='color:#9ca3af; font-size:0.75rem; font-weight:700; margin-left:5px;'>SEARCH CATALOG</p>", unsafe_allow_html=True)
 col_search_in, col_search_btn = st.sidebar.columns([0.76, 0.24])
 
 search_input = col_search_in.text_input("Search catalog", placeholder="Search songs, artists...", label_visibility="collapsed")
@@ -222,24 +224,20 @@ search_clicked = col_search_btn.button("🔍", key="sidebar_search_button", use_
 if search_clicked or (search_input and search_input != st.session_state.get("last_search", "")):
     if search_input.strip():
         st.session_state.last_search = search_input
-        with st.spinner("Searching YouTube Music..."):
+        with st.spinner("Searching JioSaavn..."):
             st.session_state.search_results = music_manager.search_songs(search_input.strip())
             st.session_state.active_view = "Search Results"
             st.rerun()
 
-st.sidebar.markdown("<hr style='border-color:#282828; margin: 15px 0;'/>", unsafe_allow_html=True)
+st.sidebar.markdown("<hr style='border-color:#1a2235; margin: 15px 0;'/>", unsafe_allow_html=True)
 
-# YouTube Pro connection removed
-
-st.sidebar.markdown("<p style='color:#b3b3b3; font-size:0.75rem; font-weight:700; margin-top:15px; margin-left:5px;'>YOUR LIBRARY</p>", unsafe_allow_html=True)
+st.sidebar.markdown("<p style='color:#9ca3af; font-size:0.75rem; font-weight:700; margin-top:15px; margin-left:5px;'>YOUR LIBRARY</p>", unsafe_allow_html=True)
 if st.sidebar.button("🏠 Home Dashboard", use_container_width=True):
     st.session_state.active_view = "Home"
     st.rerun()
 
-# Playlists button removed
-
 # Pre-seeded Genre Buttons
-st.sidebar.markdown("<p style='color:#b3b3b3; font-size:0.75rem; font-weight:700; margin-top:15px; margin-left:5px;'>MOODS & GENRES</p>", unsafe_allow_html=True)
+st.sidebar.markdown("<p style='color:#9ca3af; font-size:0.75rem; font-weight:700; margin-top:15px; margin-left:5px;'>MOODS & GENRES</p>", unsafe_allow_html=True)
 col_l, col_r = st.sidebar.columns(2)
 if col_l.button("Lo-Fi Beats", use_container_width=True):
     with st.spinner("Loading playlist..."):
@@ -263,57 +261,55 @@ if col_r.button("Top Hits", use_container_width=True):
         st.rerun()
 
 # Queue Display
-st.sidebar.markdown("<p style='color:#b3b3b3; font-size:0.75rem; font-weight:700; margin-top:25px; margin-left:5px;'>PLAYING NEXT</p>", unsafe_allow_html=True)
+st.sidebar.markdown("<p style='color:#9ca3af; font-size:0.75rem; font-weight:700; margin-top:25px; margin-left:5px;'>PLAYING NEXT</p>", unsafe_allow_html=True)
 if st.session_state.queue:
     for idx, q_track in enumerate(st.session_state.queue[:4]):
         st.sidebar.markdown(f"""
-        <div style="font-size:0.85rem; color:#ffffff; padding:4px 8px; border-radius:4px; margin-bottom:4px; background:#181818; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+        <div style="font-size:0.85rem; color:#ffffff; padding:4px 8px; border-radius:4px; margin-bottom:4px; background:#111827; border: 1px solid #1a2235; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
             {idx+1}. <b>{q_track['title']}</b><br>
-            <span style="color:#b3b3b3; font-size:0.75rem;">{q_track['artist']}</span>
+            <span style="color:#9ca3af; font-size:0.75rem;">{q_track['artist']}</span>
         </div>
         """, unsafe_allow_html=True)
     if len(st.session_state.queue) > 4:
-        st.sidebar.markdown(f"<p style='color:#b3b3b3; font-size:0.75rem; text-align:center;'>+ {len(st.session_state.queue)-4} more songs</p>", unsafe_allow_html=True)
+        st.sidebar.markdown(f"<p style='color:#9ca3af; font-size:0.75rem; text-align:center;'>+ {len(st.session_state.queue)-4} more songs</p>", unsafe_allow_html=True)
     if st.sidebar.button("Clear Queue", use_container_width=True):
         st.session_state.queue = []
         st.rerun()
 else:
-    st.sidebar.markdown("<p style='color:#535353; font-size:0.8rem; margin-left:5px;'>Queue is empty.</p>", unsafe_allow_html=True)
-
-# Now Playing moved to the right panel
+    st.sidebar.markdown("<p style='color:#4b5563; font-size:0.8rem; margin-left:5px;'>Queue is empty.</p>", unsafe_allow_html=True)
 
 # --- MAIN PANEL LAYOUT ---
 col_main, col_player = st.columns([0.7, 0.3])
 
 with col_main:
-    # 2. Main Content Area
+    # Main Content Area
     if st.session_state.active_view == "Home":
         st.markdown("<h1>Good Afternoon</h1>", unsafe_allow_html=True)
 
-
         # Popular quick play tracklist
         st.markdown("<h3 style='margin-top:40px; margin-bottom:15px;'>Trending Tracks</h3>", unsafe_allow_html=True)
-        trending_query = "latest tamil hit songs 2026"
+        trending_query = "latest hit songs 2026"
         
         if "trending_cache" not in st.session_state:
-            st.session_state.trending_cache = music_manager.search_songs(trending_query, limit=5)
+            with st.spinner("Fetching trending tracks..."):
+                st.session_state.trending_cache = music_manager.search_songs(trending_query, limit=5)
             
         for track in st.session_state.trending_cache:
             col_img, col_det, col_act = st.columns([0.08, 0.72, 0.20])
             col_img.image(track["thumbnail"], width=50)
-            col_det.markdown(f"<b>{track['title']}</b><br><span style='color:#b3b3b3; font-size:0.85rem;'>{track['artist']}</span>", unsafe_allow_html=True)
+            col_det.markdown(f"<b>{track['title']}</b><br><span style='color:#9ca3af; font-size:0.85rem;'>{track['artist']} &nbsp;|&nbsp; {track['album']}</span>", unsafe_allow_html=True)
             
             c_play, c_queue = col_act.columns(2)
-            if c_play.button("▶️ Play", key=f"trend_play_{track['video_id']}"):
+            if c_play.button("▶️ Play", key=f"trend_play_{track['track_id']}"):
                 play_track(track)
                 st.rerun()
-            if c_queue.button("➕ Queue", key=f"trend_q_{track['video_id']}"):
+            if c_queue.button("➕ Queue", key=f"trend_q_{track['track_id']}"):
                 add_to_queue(track)
                 st.rerun()
 
     elif st.session_state.active_view == "Search Results":
         st.markdown(f"<h1>Search Results</h1>", unsafe_allow_html=True)
-        st.markdown(f"<p style='color:#b3b3b3; margin-bottom:25px;'>Found {len(st.session_state.search_results)} tracks</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color:#9ca3af; margin-bottom:25px;'>Found {len(st.session_state.search_results)} tracks</p>", unsafe_allow_html=True)
         
         if not st.session_state.search_results:
             st.info("No tracks found. Try searching for something else in the sidebar!")
@@ -330,10 +326,10 @@ with col_main:
                 """, unsafe_allow_html=True)
                 
                 col_play, col_queue, col_duration = st.columns([0.15, 0.15, 0.70])
-                if col_play.button("▶️ Play Now", key=f"play_{track['video_id']}_{idx}"):
+                if col_play.button("▶️ Play Now", key=f"play_{track['track_id']}_{idx}"):
                     play_track(track)
                     st.rerun()
-                if col_queue.button("➕ Add to Queue", key=f"queue_{track['video_id']}_{idx}"):
+                if col_queue.button("➕ Add to Queue", key=f"queue_{track['track_id']}_{idx}"):
                     add_to_queue(track)
                     st.rerun()
 
@@ -341,12 +337,12 @@ with col_player:
     # Active Playing Widget (Right Panel / "Right Tab")
     if st.session_state.current_track:
         track = st.session_state.current_track
-        st.markdown("<div style='background-color:#181818; border:1px solid #282828; border-radius:12px; padding:20px; text-align:center;'>", unsafe_allow_html=True)
-        st.markdown("<p style='color:#1db954; font-size:0.85rem; font-weight:800; margin-bottom:15px;'>NOW PLAYING</p>", unsafe_allow_html=True)
+        st.markdown("<div style='background-color:#111827; border:1px solid #1a2235; border-radius:12px; padding:20px; text-align:center;'>", unsafe_allow_html=True)
+        st.markdown("<p style='color:#00d2c4; font-size:0.85rem; font-weight:800; margin-bottom:15px;'>NOW PLAYING</p>", unsafe_allow_html=True)
         
         st.image(track["thumbnail"], use_container_width=True)
         st.markdown(f"<h3 style='margin: 12px 0 2px 0; color:#ffffff; font-size:1.2rem;'>{track['title']}</h3>", unsafe_allow_html=True)
-        st.markdown(f"<p style='color:#b3b3b3; font-size:0.9rem; margin-bottom:20px;'>{track['artist']}</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color:#9ca3af; font-size:0.9rem; margin-bottom:20px;'>{track['artist']}</p>", unsafe_allow_html=True)
         
         # Audio Player controls: Prev, Play/Pause, Next, Stop
         c_prev, c_play_pause, c_next, c_stop = st.columns(4)
@@ -374,14 +370,25 @@ with col_player:
             st.session_state.is_playing = False
             st.rerun()
             
-        st.markdown("<hr style='border-color:#282828; margin: 15px 0;'/>", unsafe_allow_html=True)
+        st.markdown("<hr style='border-color:#1a2235; margin: 15px 0;'/>", unsafe_allow_html=True)
         
-        # Collapsed Video Player
+        # Audio Stream Playback Component
         if st.session_state.is_playing:
-            with st.expander("📺 View Video Stream", expanded=False):
-                st.video(f"https://www.youtube.com/watch?v={track['video_id']}", autoplay=True)
+            if track.get("stream_url"):
+                st.audio(track["stream_url"], autoplay=True, format="audio/mp4")
+            else:
+                st.warning("No streaming URL available for this track.")
         else:
             st.info("Playback Paused.")
+            
+        # Fetch and display lyrics
+        if st.session_state.is_playing:
+            if st.session_state.lyrics is None:
+                with st.spinner("Fetching lyrics..."):
+                    st.session_state.lyrics = music_manager.get_lyrics(track["track_id"])
+            
+            with st.expander("📝 View Song Lyrics", expanded=False):
+                st.markdown(f"<div style='font-size:0.85rem; text-align:left; max-height:220px; overflow-y:auto; line-height:1.5; color:#e5e7eb; white-space:pre-line;'>{st.session_state.lyrics}</div>", unsafe_allow_html=True)
             
         # Pulsing visualizer
         if st.session_state.is_playing:
@@ -395,8 +402,8 @@ with col_player:
     else:
         # Empty placeholder state for right panel
         st.markdown("""
-        <div style="background-color:#181818; border: 1px dashed #535353; border-radius:12px; padding:35px; text-align:center; color:#b3b3b3; height: 100%;">
-            <h4 style="margin:0; color:#535353;">🎵 No Song Playing</h4>
+        <div style="background-color:#111827; border: 1px dashed #4b5563; border-radius:12px; padding:35px; text-align:center; color:#9ca3af; height: 100%;">
+            <h4 style="margin:0; color:#4b5563;">🎵 No Song Playing</h4>
             <p style="margin:5px 0 0 0; font-size:0.85rem;">Select a track to start streaming!</p>
         </div>
         """, unsafe_allow_html=True)

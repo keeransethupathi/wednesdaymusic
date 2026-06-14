@@ -3,7 +3,7 @@ import sys
 
 if __name__ == "__main__":
     print("==============================================")
-    print("Launching YouTube Music App in Streamlit...")
+    print("Launching JioSaavn Connect App in Streamlit...")
     print("==============================================")
     
     try:
