@@ -1,10 +1,51 @@
 import streamlit as st
 import os
+import importlib
 import music_manager
+import streamlit.components.v1 as components
+import base64
+import requests
+
+# Force reload of music_manager to pick up updates without server restart
+importlib.reload(music_manager)
+
+@st.cache_data(show_spinner=False, ttl=1800, max_entries=50)
+def get_media_bytes(url):
+    """Fetch media content (audio) in the backend to bypass client-side Fortinet blocks."""
+    if not url:
+        return None
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+        res = requests.get(url, headers=headers, timeout=15)
+        if res.status_code == 200:
+            return res.content
+    except Exception as e:
+        print(f"[Backend Proxy] Error fetching media: {e}")
+    return None
+
+@st.cache_data(show_spinner=False, ttl=1800, max_entries=100)
+def get_image_base64_uri(url):
+    """Fetch image in the backend and convert to base64 Data URI to bypass Fortinet blocks."""
+    if not url:
+        return ""
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+        res = requests.get(url, headers=headers, timeout=10)
+        if res.status_code == 200:
+            encoded = base64.b64encode(res.content).decode("utf-8")
+            content_type = res.headers.get("Content-Type", "image/jpeg")
+            return f"data:{content_type};base64,{encoded}"
+    except Exception as e:
+        print(f"[Backend Proxy] Error base64-encoding image: {e}")
+    return url  # Fallback to original URL
 
 # Page configurations
 st.set_page_config(
-    page_title="JioSaavn Connect",
+    page_title="Wednesday Songs",
     page_icon="🎵",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -23,7 +64,23 @@ st.markdown("""
 
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
+    header {visibility: visible !important;}
+
+    /* Hide the close button when sidebar is open */
+    section[data-testid="stSidebar"] button[aria-label="Close sidebar"],
+    section[data-testid="stSidebar"] [data-testid="collapsedControl"] {
+        display: none !important;
+    }
+
+    /* Hide the auto-next trigger button wrapper container completely */
+    div.element-container:has(button[key="auto_next_trigger"]),
+    button[key="auto_next_trigger"],
+    button[aria-label="AutoNextTrigger"] {
+        display: none !important;
+        height: 0px !important;
+        margin: 0px !important;
+        padding: 0px !important;
+    }
 
     /* Sidebar JioSaavn branding */
     section[data-testid="stSidebar"] {
@@ -159,6 +216,45 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+TOP_ARTISTS = [
+    ("Arijit Singh", "arijit-singh-songs"),
+    ("Vijay", "vijay-songs"),
+    ("Rajinikanth", "rajinikanth-songs"),
+    ("Kishore Kumar", "kishore-kumar-songs"),
+    ("Lata Mangeshkar", "lata-mangeshkar-songs"),
+    ("Pritam", "pritam-songs"),
+    ("Shreya Ghoshal", "shreya-ghoshal-songs"),
+    ("Diljit Dosanjh", "diljit-dosanjh-songs"),
+    ("Yo Yo Honey Singh", "yo-yo-honey-singh-songs"),
+    ("Badshah", "badshah-songs"),
+    ("Allu Arjun", "allu-arjun-songs"),
+    ("Sonu Nigam", "sonu-nigam-songs"),
+    ("Justin Bieber", "justin-bieber-songs"),
+    ("Ed Sheeran", "ed-sheeran-songs"),
+    ("Udit Narayan", "udit-narayan-songs"),
+    ("Emraan Hashmi", "emraan-hashmi-songs"),
+    ("Rajesh Khanna", "rajesh-khanna-songs"),
+    ("Varun Dhawan", "varun-dhawan-songs"),
+    ("Akshay Kumar", "akshay-kumar-songs"),
+    ("Shah Rukh Khan", "shah-rukh-khan-songs"),
+    ("Neha Kakkar", "neha-kakkar-songs"),
+    ("Nucleya", "nucleya-songs"),
+    ("Sanam Puri", "sanam-puri-songs"),
+    ("Raftaar", "raftaar-songs"),
+    ("Himesh Reshammiya", "himesh-reshammiya-songs"),
+    ("Armaan Malik", "armaan-malik-songs"),
+    ("Deepika Padukone", "deepika-padukone-songs"),
+    ("Salman Khan", "salman-khan-songs"),
+    ("Alia Bhatt", "alia-bhatt-songs"),
+    ("Ranbir Kapoor", "ranbir-kapoor-songs"),
+    ("Anushka Sharma", "anushka-sharma-songs"),
+    ("Shahid Kapoor", "shahid-kapoor-songs"),
+    ("Sunny Leone", "sunny-leone-songs"),
+    ("Amitabh Bachchan", "amitabh-bachchan-songs"),
+    ("Priyanka Chopra", "priyanka-chopra-songs"),
+    ("Katrina Kaif", "katrina-kaif-songs"),
+]
+
 # Initialize session state variables
 if "current_track" not in st.session_state:
     st.session_state.current_track = None
@@ -211,8 +307,17 @@ def skip_prev_track():
     else:
         st.toast("No previous tracks in history.")
 
+def on_artist_selectbox_change():
+    selected = st.session_state.artist_selectbox
+    if selected != "-- Explore All Artists --":
+        st.session_state.search_results = music_manager.search_songs(selected)
+        st.session_state.results_title = f"Songs by {selected}"
+        st.session_state.active_view = "Search Results"
+        # Reset the selectbox value in session state without exception
+        st.session_state.artist_selectbox = "-- Explore All Artists --"
+
 # --- SIDEBAR Layout ---
-st.sidebar.markdown("<h2 style='color:#00d2c4; font-weight:800; margin-bottom:15px; text-align:center;'>🎵 JIOSAAVN</h2>", unsafe_allow_html=True)
+st.sidebar.markdown("<h2 style='color:#00d2c4; font-weight:800; margin-bottom:15px; text-align:center;'>🎵 WEDNESDAY SONGS</h2>", unsafe_allow_html=True)
 
 # 1. Search Bar at the VERY TOP of the sidebar aligned side-by-side using columns
 st.sidebar.markdown("<p style='color:#9ca3af; font-size:0.75rem; font-weight:700; margin-left:5px;'>SEARCH CATALOG</p>", unsafe_allow_html=True)
@@ -224,8 +329,9 @@ search_clicked = col_search_btn.button("🔍", key="sidebar_search_button", use_
 if search_clicked or (search_input and search_input != st.session_state.get("last_search", "")):
     if search_input.strip():
         st.session_state.last_search = search_input
-        with st.spinner("Searching JioSaavn..."):
+        with st.spinner("Searching Wednesday Songs..."):
             st.session_state.search_results = music_manager.search_songs(search_input.strip())
+            st.session_state.results_title = f"Search Results for '{search_input.strip()}'"
             st.session_state.active_view = "Search Results"
             st.rerun()
 
@@ -234,31 +340,38 @@ st.sidebar.markdown("<hr style='border-color:#1a2235; margin: 15px 0;'/>", unsaf
 st.sidebar.markdown("<p style='color:#9ca3af; font-size:0.75rem; font-weight:700; margin-top:15px; margin-left:5px;'>YOUR LIBRARY</p>", unsafe_allow_html=True)
 if st.sidebar.button("🏠 Home Dashboard", use_container_width=True):
     st.session_state.active_view = "Home"
+    if "artist_selectbox" in st.session_state:
+        st.session_state.artist_selectbox = "-- Explore All Artists --"
     st.rerun()
 
-# Pre-seeded Genre Buttons
-st.sidebar.markdown("<p style='color:#9ca3af; font-size:0.75rem; font-weight:700; margin-top:15px; margin-left:5px;'>MOODS & GENRES</p>", unsafe_allow_html=True)
+if st.sidebar.button("🎻 Ilaiyaraaja Specials", use_container_width=True):
+    with st.spinner("Loading Ilaiyaraaja specials..."):
+        st.session_state.search_results = music_manager.get_ilaiyaraaja_specials()
+        st.session_state.results_title = "Ilaiyaraaja Specials (Top 50 Tamil Hits)"
+        st.session_state.active_view = "Search Results"
+        st.rerun()
+
+# Top Artists
+st.sidebar.markdown("<p style='color:#9ca3af; font-size:0.75rem; font-weight:700; margin-top:15px; margin-left:5px;'>TOP ARTISTS</p>", unsafe_allow_html=True)
 col_l, col_r = st.sidebar.columns(2)
-if col_l.button("Lo-Fi Beats", use_container_width=True):
-    with st.spinner("Loading playlist..."):
-        st.session_state.search_results = music_manager.get_mood_playlist("lofi beats")
-        st.session_state.active_view = "Search Results"
-        st.rerun()
-if col_r.button("Synthwave", use_container_width=True):
-    with st.spinner("Loading playlist..."):
-        st.session_state.search_results = music_manager.get_mood_playlist("synthwave retro")
-        st.session_state.active_view = "Search Results"
-        st.rerun()
-if col_l.button("Chillout", use_container_width=True):
-    with st.spinner("Loading playlist..."):
-        st.session_state.search_results = music_manager.get_mood_playlist("ambient chillout")
-        st.session_state.active_view = "Search Results"
-        st.rerun()
-if col_r.button("Top Hits", use_container_width=True):
-    with st.spinner("Loading playlist..."):
-        st.session_state.search_results = music_manager.get_mood_playlist("popular hit songs")
-        st.session_state.active_view = "Search Results"
-        st.rerun()
+featured_artists = ["Arijit Singh", "Vijay", "Rajinikanth", "Kishore Kumar", "Shreya Ghoshal", "Diljit Dosanjh", "Pritam", "Badshah"]
+
+for idx, artist in enumerate(featured_artists):
+    col = col_l if idx % 2 == 0 else col_r
+    if col.button(artist, use_container_width=True, key=f"artist_btn_{idx}"):
+        with st.spinner(f"Loading {artist} songs..."):
+            st.session_state.search_results = music_manager.search_songs(artist)
+            st.session_state.results_title = f"Songs by {artist}"
+            st.session_state.active_view = "Search Results"
+            st.rerun()
+
+selected_artist = st.sidebar.selectbox(
+    "Explore All Artists",
+    options=["-- Explore All Artists --"] + [a[0] for a in TOP_ARTISTS],
+    key="artist_selectbox",
+    on_change=on_artist_selectbox_change,
+    label_visibility="collapsed"
+)
 
 # Queue Display
 st.sidebar.markdown("<p style='color:#9ca3af; font-size:0.75rem; font-weight:700; margin-top:25px; margin-left:5px;'>PLAYING NEXT</p>", unsafe_allow_html=True)
@@ -278,6 +391,11 @@ if st.session_state.queue:
 else:
     st.sidebar.markdown("<p style='color:#4b5563; font-size:0.8rem; margin-left:5px;'>Queue is empty.</p>", unsafe_allow_html=True)
 
+# Hidden auto-next trigger button
+if st.sidebar.button("AutoNextTrigger", key="auto_next_trigger"):
+    skip_next_track()
+    st.rerun()
+
 # --- MAIN PANEL LAYOUT ---
 col_main, col_player = st.columns([0.7, 0.3])
 
@@ -288,27 +406,123 @@ with col_main:
 
         # Popular quick play tracklist
         st.markdown("<h3 style='margin-top:40px; margin-bottom:15px;'>Trending Tracks</h3>", unsafe_allow_html=True)
-        trending_query = "latest hit songs 2026"
         
-        if "trending_cache" not in st.session_state:
-            with st.spinner("Fetching trending tracks..."):
-                st.session_state.trending_cache = music_manager.search_songs(trending_query, limit=5)
-            
-        for track in st.session_state.trending_cache:
-            col_img, col_det, col_act = st.columns([0.08, 0.72, 0.20])
-            col_img.image(track["thumbnail"], width=50)
-            col_det.markdown(f"<b>{track['title']}</b><br><span style='color:#9ca3af; font-size:0.85rem;'>{track['artist']} &nbsp;|&nbsp; {track['album']}</span>", unsafe_allow_html=True)
-            
-            c_play, c_queue = col_act.columns(2)
-            if c_play.button("▶️ Play", key=f"trend_play_{track['track_id']}"):
-                play_track(track)
-                st.rerun()
-            if c_queue.button("➕ Queue", key=f"trend_q_{track['track_id']}"):
-                add_to_queue(track)
-                st.rerun()
+        tab_names = ["Tamil 🌟", "Hindi", "Malayalam", "Telugu", "Trending Now"]
+        tabs = st.tabs(tab_names)
+        
+        queries = {
+            "Tamil 🌟": {"query": "latest tamil hit songs", "key": "trending_tamil"},
+            "Hindi": {"query": "latest hindi hit songs", "key": "trending_hindi"},
+            "Malayalam": {"query": "latest malayalam hit songs", "key": "trending_malayalam"},
+            "Telugu": {"query": "latest telugu hit songs", "key": "trending_telugu"},
+            "Trending Now": {"query": "latest trending songs", "key": "trending_now"}
+        }
+        
+        for tab, tab_name in zip(tabs, tab_names):
+            with tab:
+                config = queries[tab_name]
+                cache_key = config["key"]
+                if cache_key not in st.session_state:
+                    with st.spinner(f"Fetching {tab_name} tracks..."):
+                        st.session_state[cache_key] = music_manager.search_songs(config["query"], limit=20)
+                
+                tracks = st.session_state[cache_key]
+                if not tracks:
+                    st.info(f"No tracks found for {tab_name}.")
+                else:
+                    for track in tracks:
+                        col_img, col_det, col_act = st.columns([0.08, 0.72, 0.20])
+                        col_img.image(get_image_base64_uri(track["thumbnail"]), width=50)
+                        col_det.markdown(f"<b>{track['title']}</b><br><span style='color:#9ca3af; font-size:0.85rem;'>{track['artist']} &nbsp;|&nbsp; {track['album']}</span>", unsafe_allow_html=True)
+                        
+                        c_play, c_queue = col_act.columns(2)
+                        if c_play.button("▶️ Play", key=f"trend_play_{cache_key}_{track['track_id']}"):
+                            play_track(track)
+                            st.rerun()
+                        if c_queue.button("➕ Queue", key=f"trend_q_{cache_key}_{track['track_id']}"):
+                            add_to_queue(track)
+                            st.rerun()
+
+        # Featured Tamil Playlists Section
+        st.markdown("<h3 style='margin-top:40px; margin-bottom:15px;'>Featured Tamil Playlists</h3>", unsafe_allow_html=True)
+        
+        playlists_data = [
+            {"title": 'Therific Theme', "token": ',JL,xvmQHE0_', "image": 'https://c.saavncdn.com/editorial/TherificTheme_20260528051116_500x500.jpg'},
+            {"title": "Let's Play - Vijay", "token": '-KAZYpBulyM_', "image": 'https://c.saavncdn.com/editorial/Let_sPlayVijay_20250217095544_500x500.jpg'},
+            {"title": 'Viral Nation', "token": 'tfVkYjaAbZJieSJqt9HmOQ__', "image": 'https://c.saavncdn.com/editorial/ViralNation_20260603114636_500x500.jpg'},
+            {"title": 'Semma Mass - Tamil', "token": 'R2ISZzIDGJc_', "image": 'https://c.saavncdn.com/editorial/SemmaMassTamil_20260518135619_500x500.jpg'},
+            {"title": 'Best of Romance - Tamil', "token": 'P2sTu90EH1sZmWp1Op3nVA__', "image": 'https://c.saavncdn.com/editorial/BestofRomanceTamil_20260422094532_500x500.jpg'},
+            {"title": 'ArtistOne Finds', "token": 'nOyNH0fuWtGP3AiNrzXpzA__', "image": 'https://c.saavncdn.com/editorial/ArtistOneFinds_20260612061156_500x500.jpg'},
+            {"title": "Let's Play - Anirudh Ravichander - Tamil", "token": 'ePUVUJs1h,E_', "image": 'https://c.saavncdn.com/editorial/Let_sPlayAnirudhRavichanderTamil_20250217095503_500x500.jpg'},
+            {"title": 'Top Kuthu - Tamil', "token": 'CNVzQf7lvT8wkg5tVhI3fw__', "image": 'https://c.saavncdn.com/editorial/TopKuthuTamil_20260422094846_500x500.jpg'},
+            {"title": "Let's Play - Rajinikanth", "token": 'hVwUe6exUYM_', "image": 'https://c.saavncdn.com/editorial/Let_sPlayRajinikanth_20250218065230_500x500.jpg'},
+            {"title": 'MGR Philosophical Songs - Tamil', "token": 'DWnFgpgW3PwGSw2I1RxdhQ__', "image": 'https://c.saavncdn.com/editorial/MGRPhilosophicalSongsTamil_20251209063307_500x500.jpg'},
+            {"title": "Let's Play - Pradeep Ranganathan", "token": 'pfqtqaCDk6apJ,OEBt5Zbg__', "image": 'https://c.saavncdn.com/editorial/Let_sPlayPradeepRanganathan_20260403085039_500x500.jpg'},
+            {"title": "Let's Play - A.R. Rahman", "token": '9qHvXYY4r,JFo9wdEAzFBA__', "image": 'https://c.saavncdn.com/editorial/Let_sPlayA-R-Rahman_20231218061538_500x500.jpg'},
+            {"title": 'Tamil Hit Songs', "token": 'QbD85KAEmtcZmWp1Op3nVA__', "image": 'https://c.saavncdn.com/editorial/TamilHitSongs_20250217095444_500x500.jpg'},
+            {"title": 'Iravaaga Nee', "token": '5NTonN-oTdpuOxiEGmm6lQ__', "image": 'https://c.saavncdn.com/editorial/IravaagaNee_20260302042438_500x500.jpg'},
+            {"title": 'Dance in Love - Tamil', "token": 'Le-woPWglF1ieSJqt9HmOQ__', "image": 'https://c.saavncdn.com/editorial/DanceinLoveTamil_20260305071023_500x500.jpg'},
+            {"title": 'Mazhai Melodies', "token": 'nCKY99zWUMQ_', "image": 'https://c.saavncdn.com/editorial/MazhaiMelodies_20251201153855_500x500.jpg'},
+            {"title": "Let's Play - Sai Abhyankkar", "token": 'At02y,UCrb,QbUI04mhbCA__', "image": 'https://c.saavncdn.com/editorial/Let_sPlaySaiAbhyankkar_20251028120032_500x500.jpg'},
+            {"title": "Let's Play - Sivakarthikeyan", "token": 'Ml,4H8ou2pM_', "image": 'https://c.saavncdn.com/editorial/Let_sPlaySivakarthikeyan_20250211135435_500x500.jpg'},
+            {"title": "Let's Play - Suriya", "token": 'VvbhxbsrhEg_', "image": 'https://c.saavncdn.com/editorial/Let_sPlaySuriya_20250217095552_500x500.jpg'},
+            {"title": 'Manam Virumbum Melody', "token": 'JLxZmGNZvU4_', "image": 'https://c.saavncdn.com/editorial/ManamVirumbumMelody_20260105090923_500x500.jpg'},
+            {"title": 'Trending POP - Tamil', "token": '5z8vKjNnhmIGSw2I1RxdhQ__', "image": 'https://c.saavncdn.com/editorial/TrendingPOPTamil_20260422094931_500x500.jpg'},
+            {"title": 'Motivational Hits - Tamil', "token": 'jMHINeLYW1eO0eMLZZxqsA__', "image": 'https://c.saavncdn.com/editorial/MotivationalHitsTamil_20251126081151_500x500.jpg'},
+            {"title": 'Pudhu Jodi', "token": 'K2ClpzkOqzTfemJ68FuXsA__', "image": 'https://c.saavncdn.com/editorial/PudhuJodi_20260225035907_500x500.jpg'},
+            {"title": 'Chartbusters 2024 - Tamil', "token": 'AeFkwBP3WxIrMQGDkCmGvg__', "image": 'https://c.saavncdn.com/editorial/Chartbusters2024Tamil_20241205112832_500x500.jpg'},
+            {"title": 'Anirudh Ravichander - Party Songs - Tamil', "token": 'TUXyju4uMac_', "image": 'https://c.saavncdn.com/editorial/AnirudhDanceSongsTamil_20240213054952_500x500.jpg'},
+            {"title": "Let's Play - Ajith Kumar", "token": 'oAj,lBFGWbU_', "image": 'https://c.saavncdn.com/editorial/Let_sPlayAjithKumar_20250310083422_500x500.jpg'},
+            {"title": 'Mann Vasanai - Tamil', "token": 'FSoXzFcf8jMGSw2I1RxdhQ__', "image": 'https://c.saavncdn.com/editorial/MannVasanaiTamil_20260225035901_500x500.jpg'},
+            {"title": 'Mazhai Dance', "token": 'c5gIC3jvDZZuOxiEGmm6lQ__', "image": 'https://c.saavncdn.com/editorial/MazhaiDance_20260225035856_500x500.jpg'},
+            {"title": 'A.R. Rahman - Party Songs - Tamil', "token": 'GbtG0AkkczPfemJ68FuXsA__', "image": 'https://c.saavncdn.com/editorial/A-R-RahmanDanceSongsTamil_20240213060615_500x500.jpg'},
+            {"title": 'Dance Queens - Tamil', "token": '2uwAUQjOVlnfemJ68FuXsA__', "image": 'https://c.saavncdn.com/editorial/DanceQueensTamil_20251209063316_500x500.jpg'},
+        ]
+        
+        # Display in 4 columns
+        rows = [playlists_data[i:i+4] for i in range(0, len(playlists_data), 4)]
+        for row_idx, row in enumerate(rows):
+            cols = st.columns(4)
+            for col, p in zip(cols, row):
+                with col:
+                    st.markdown(f"""
+                    <div class="album-card">
+                        <img class="album-image" src="{get_image_base64_uri(p['image'])}" alt="{p['title']}">
+                        <div class="album-title">{p['title']}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    if st.button("Open Playlist", key=f"playlist_btn_{p['token']}_{row_idx}", use_container_width=True):
+                        with st.spinner(f"Loading {p['title']}..."):
+                            st.session_state.search_results = music_manager.get_playlist_tracks(p['token'])
+                            st.session_state.results_title = p['title']
+                            st.session_state.active_view = "Search Results"
+                            st.rerun()
+
+        # Dedicated Ilaiyaraaja Classics Section
+        st.markdown("<h3 style='margin-top:40px; margin-bottom:15px;'>🎹 Ilaiyaraaja Classics (Top 50)</h3>", unsafe_allow_html=True)
+        if "ilaiyaraaja_cache" not in st.session_state:
+            with st.spinner("Loading Ilaiyaraaja classics..."):
+                st.session_state.ilaiyaraaja_cache = music_manager.get_ilaiyaraaja_specials()
+                
+        if not st.session_state.ilaiyaraaja_cache:
+            st.info("No classics found.")
+        else:
+            for track in st.session_state.ilaiyaraaja_cache:
+                col_img, col_det, col_act = st.columns([0.08, 0.72, 0.20])
+                col_img.image(get_image_base64_uri(track["thumbnail"]), width=50)
+                col_det.markdown(f"<b>{track['title']}</b><br><span style='color:#9ca3af; font-size:0.85rem;'>{track['artist']} &nbsp;|&nbsp; {track['album']}</span>", unsafe_allow_html=True)
+                
+                c_play, c_queue = col_act.columns(2)
+                if c_play.button("▶️ Play", key=f"ir_play_{track['track_id']}"):
+                    play_track(track)
+                    st.rerun()
+                if c_queue.button("➕ Queue", key=f"ir_q_{track['track_id']}"):
+                    add_to_queue(track)
+                    st.rerun()
 
     elif st.session_state.active_view == "Search Results":
-        st.markdown(f"<h1>Search Results</h1>", unsafe_allow_html=True)
+        title = st.session_state.get("results_title", "Search Results")
+        st.markdown(f"<h1>{title}</h1>", unsafe_allow_html=True)
         st.markdown(f"<p style='color:#9ca3af; margin-bottom:25px;'>Found {len(st.session_state.search_results)} tracks</p>", unsafe_allow_html=True)
         
         if not st.session_state.search_results:
@@ -317,7 +531,7 @@ with col_main:
             for idx, track in enumerate(st.session_state.search_results):
                 st.markdown(f"""
                 <div class="track-row">
-                    <img class="track-image" src="{track['thumbnail']}" alt="Thumb">
+                    <img class="track-image" src="{get_image_base64_uri(track['thumbnail'])}" alt="Thumb">
                     <div class="track-meta">
                         <div class="track-title">{track['title']}</div>
                         <div class="track-artist">{track['artist']} &nbsp;|&nbsp; {track['album']}</div>
@@ -340,7 +554,7 @@ with col_player:
         st.markdown("<div style='background-color:#111827; border:1px solid #1a2235; border-radius:12px; padding:20px; text-align:center;'>", unsafe_allow_html=True)
         st.markdown("<p style='color:#00d2c4; font-size:0.85rem; font-weight:800; margin-bottom:15px;'>NOW PLAYING</p>", unsafe_allow_html=True)
         
-        st.image(track["thumbnail"], use_container_width=True)
+        st.image(get_image_base64_uri(track["thumbnail"]), use_container_width=True)
         st.markdown(f"<h3 style='margin: 12px 0 2px 0; color:#ffffff; font-size:1.2rem;'>{track['title']}</h3>", unsafe_allow_html=True)
         st.markdown(f"<p style='color:#9ca3af; font-size:0.9rem; margin-bottom:20px;'>{track['artist']}</p>", unsafe_allow_html=True)
         
@@ -375,7 +589,55 @@ with col_player:
         # Audio Stream Playback Component
         if st.session_state.is_playing:
             if track.get("stream_url"):
-                st.audio(track["stream_url"], autoplay=True, format="audio/mp4")
+                # Fetch audio stream bytes in backend to bypass firewall blocks
+                with st.spinner("Buffering audio stream..."):
+                    audio_bytes = get_media_bytes(track["stream_url"])
+                
+                if audio_bytes:
+                    st.audio(audio_bytes, autoplay=True, format="audio/mp4")
+                else:
+                    st.audio(track["stream_url"], autoplay=True, format="audio/mp4")
+                
+                # Auto-play next song when current finishes
+                components.html(f"""
+                <script>
+                    function setupAutoNext() {{
+                        const parentDoc = window.parent.document;
+                        
+                        function getTriggerBtn() {{
+                            const buttons = parentDoc.querySelectorAll('button');
+                            for (const btn of buttons) {{
+                                if (btn.textContent.includes('AutoNextTrigger')) {{
+                                    return btn;
+                                }}
+                            }}
+                            return null;
+                        }}
+                        
+                        // Repeatedly check for audio elements and bind onended
+                        const intervalId = setInterval(() => {{
+                            const triggerBtn = getTriggerBtn();
+                            const audios = parentDoc.querySelectorAll('audio');
+                            if (audios.length > 0 && triggerBtn) {{
+                                const audio = audios[audios.length - 1];
+                                // Prevent multiple bindings
+                                if (!audio.dataset.onendedBound) {{
+                                    audio.onended = function() {{
+                                        console.log("[AutoNext] Audio completed. Clicking trigger button.");
+                                        triggerBtn.click();
+                                    }};
+                                    audio.dataset.onendedBound = "true";
+                                    console.log("[AutoNext] Bound onended event successfully.");
+                                }}
+                            }}
+                        }}, 500);
+                        
+                        // Clean up interval on page unload
+                        window.addEventListener('unload', () => clearInterval(intervalId));
+                    }}
+                    setupAutoNext();
+                </script>
+                """, height=0)
             else:
                 st.warning("No streaming URL available for this track.")
         else:
