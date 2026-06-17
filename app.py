@@ -216,44 +216,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-TOP_ARTISTS = [
-    ("Arijit Singh", "arijit-singh-songs"),
-    ("Vijay", "vijay-songs"),
-    ("Rajinikanth", "rajinikanth-songs"),
-    ("Kishore Kumar", "kishore-kumar-songs"),
-    ("Lata Mangeshkar", "lata-mangeshkar-songs"),
-    ("Pritam", "pritam-songs"),
-    ("Shreya Ghoshal", "shreya-ghoshal-songs"),
-    ("Diljit Dosanjh", "diljit-dosanjh-songs"),
-    ("Yo Yo Honey Singh", "yo-yo-honey-singh-songs"),
-    ("Badshah", "badshah-songs"),
-    ("Allu Arjun", "allu-arjun-songs"),
-    ("Sonu Nigam", "sonu-nigam-songs"),
-    ("Justin Bieber", "justin-bieber-songs"),
-    ("Ed Sheeran", "ed-sheeran-songs"),
-    ("Udit Narayan", "udit-narayan-songs"),
-    ("Emraan Hashmi", "emraan-hashmi-songs"),
-    ("Rajesh Khanna", "rajesh-khanna-songs"),
-    ("Varun Dhawan", "varun-dhawan-songs"),
-    ("Akshay Kumar", "akshay-kumar-songs"),
-    ("Shah Rukh Khan", "shah-rukh-khan-songs"),
-    ("Neha Kakkar", "neha-kakkar-songs"),
-    ("Nucleya", "nucleya-songs"),
-    ("Sanam Puri", "sanam-puri-songs"),
-    ("Raftaar", "raftaar-songs"),
-    ("Himesh Reshammiya", "himesh-reshammiya-songs"),
-    ("Armaan Malik", "armaan-malik-songs"),
-    ("Deepika Padukone", "deepika-padukone-songs"),
-    ("Salman Khan", "salman-khan-songs"),
-    ("Alia Bhatt", "alia-bhatt-songs"),
-    ("Ranbir Kapoor", "ranbir-kapoor-songs"),
-    ("Anushka Sharma", "anushka-sharma-songs"),
-    ("Shahid Kapoor", "shahid-kapoor-songs"),
-    ("Sunny Leone", "sunny-leone-songs"),
-    ("Amitabh Bachchan", "amitabh-bachchan-songs"),
-    ("Priyanka Chopra", "priyanka-chopra-songs"),
-    ("Katrina Kaif", "katrina-kaif-songs"),
-]
+
 
 # Initialize session state variables
 if "current_track" not in st.session_state:
@@ -307,14 +270,7 @@ def skip_prev_track():
     else:
         st.toast("No previous tracks in history.")
 
-def on_artist_selectbox_change():
-    selected = st.session_state.artist_selectbox
-    if selected != "-- Explore All Artists --":
-        st.session_state.search_results = music_manager.search_songs(selected)
-        st.session_state.results_title = f"Songs by {selected}"
-        st.session_state.active_view = "Search Results"
-        # Reset the selectbox value in session state without exception
-        st.session_state.artist_selectbox = "-- Explore All Artists --"
+
 
 # --- SIDEBAR Layout ---
 st.sidebar.markdown("<h2 style='color:#00d2c4; font-weight:800; margin-bottom:15px; text-align:center;'>🎵 WEDNESDAY SONGS</h2>", unsafe_allow_html=True)
@@ -340,38 +296,9 @@ st.sidebar.markdown("<hr style='border-color:#1a2235; margin: 15px 0;'/>", unsaf
 st.sidebar.markdown("<p style='color:#9ca3af; font-size:0.75rem; font-weight:700; margin-top:15px; margin-left:5px;'>YOUR LIBRARY</p>", unsafe_allow_html=True)
 if st.sidebar.button("🏠 Home Dashboard", use_container_width=True):
     st.session_state.active_view = "Home"
-    if "artist_selectbox" in st.session_state:
-        st.session_state.artist_selectbox = "-- Explore All Artists --"
     st.rerun()
 
-if st.sidebar.button("🎻 Ilaiyaraaja Specials", use_container_width=True):
-    with st.spinner("Loading Ilaiyaraaja specials..."):
-        st.session_state.search_results = music_manager.get_ilaiyaraaja_specials()
-        st.session_state.results_title = "Ilaiyaraaja Specials (Top 50 Tamil Hits)"
-        st.session_state.active_view = "Search Results"
-        st.rerun()
 
-# Top Artists
-st.sidebar.markdown("<p style='color:#9ca3af; font-size:0.75rem; font-weight:700; margin-top:15px; margin-left:5px;'>TOP ARTISTS</p>", unsafe_allow_html=True)
-col_l, col_r = st.sidebar.columns(2)
-featured_artists = ["Arijit Singh", "Vijay", "Rajinikanth", "Kishore Kumar", "Shreya Ghoshal", "Diljit Dosanjh", "Pritam", "Badshah"]
-
-for idx, artist in enumerate(featured_artists):
-    col = col_l if idx % 2 == 0 else col_r
-    if col.button(artist, use_container_width=True, key=f"artist_btn_{idx}"):
-        with st.spinner(f"Loading {artist} songs..."):
-            st.session_state.search_results = music_manager.search_songs(artist)
-            st.session_state.results_title = f"Songs by {artist}"
-            st.session_state.active_view = "Search Results"
-            st.rerun()
-
-selected_artist = st.sidebar.selectbox(
-    "Explore All Artists",
-    options=["-- Explore All Artists --"] + [a[0] for a in TOP_ARTISTS],
-    key="artist_selectbox",
-    on_change=on_artist_selectbox_change,
-    label_visibility="collapsed"
-)
 
 # Queue Display
 st.sidebar.markdown("<p style='color:#9ca3af; font-size:0.75rem; font-weight:700; margin-top:25px; margin-left:5px;'>PLAYING NEXT</p>", unsafe_allow_html=True)
@@ -498,27 +425,7 @@ with col_main:
                             st.session_state.active_view = "Search Results"
                             st.rerun()
 
-        # Dedicated Ilaiyaraaja Classics Section
-        st.markdown("<h3 style='margin-top:40px; margin-bottom:15px;'>🎹 Ilaiyaraaja Classics (Top 50)</h3>", unsafe_allow_html=True)
-        if "ilaiyaraaja_cache" not in st.session_state:
-            with st.spinner("Loading Ilaiyaraaja classics..."):
-                st.session_state.ilaiyaraaja_cache = music_manager.get_ilaiyaraaja_specials()
-                
-        if not st.session_state.ilaiyaraaja_cache:
-            st.info("No classics found.")
-        else:
-            for track in st.session_state.ilaiyaraaja_cache:
-                col_img, col_det, col_act = st.columns([0.08, 0.72, 0.20])
-                col_img.image(get_image_base64_uri(track["thumbnail"]), width=50)
-                col_det.markdown(f"<b>{track['title']}</b><br><span style='color:#9ca3af; font-size:0.85rem;'>{track['artist']} &nbsp;|&nbsp; {track['album']}</span>", unsafe_allow_html=True)
-                
-                c_play, c_queue = col_act.columns(2)
-                if c_play.button("▶️ Play", key=f"ir_play_{track['track_id']}"):
-                    play_track(track)
-                    st.rerun()
-                if c_queue.button("➕ Queue", key=f"ir_q_{track['track_id']}"):
-                    add_to_queue(track)
-                    st.rerun()
+
 
     elif st.session_state.active_view == "Search Results":
         title = st.session_state.get("results_title", "Search Results")
