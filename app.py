@@ -370,60 +370,7 @@ with col_main:
                             add_to_queue(track)
                             st.rerun()
 
-        # Featured Tamil Playlists Section
-        st.markdown("<h3 style='margin-top:40px; margin-bottom:15px;'>Featured Tamil Playlists</h3>", unsafe_allow_html=True)
-        
-        playlists_data = [
-            {"title": 'Therific Theme', "token": ',JL,xvmQHE0_', "image": 'https://c.saavncdn.com/editorial/TherificTheme_20260528051116_500x500.jpg'},
-            {"title": "Let's Play - Vijay", "token": '-KAZYpBulyM_', "image": 'https://c.saavncdn.com/editorial/Let_sPlayVijay_20250217095544_500x500.jpg'},
-            {"title": 'Viral Nation', "token": 'tfVkYjaAbZJieSJqt9HmOQ__', "image": 'https://c.saavncdn.com/editorial/ViralNation_20260603114636_500x500.jpg'},
-            {"title": 'Semma Mass - Tamil', "token": 'R2ISZzIDGJc_', "image": 'https://c.saavncdn.com/editorial/SemmaMassTamil_20260518135619_500x500.jpg'},
-            {"title": 'Best of Romance - Tamil', "token": 'P2sTu90EH1sZmWp1Op3nVA__', "image": 'https://c.saavncdn.com/editorial/BestofRomanceTamil_20260422094532_500x500.jpg'},
-            {"title": 'ArtistOne Finds', "token": 'nOyNH0fuWtGP3AiNrzXpzA__', "image": 'https://c.saavncdn.com/editorial/ArtistOneFinds_20260612061156_500x500.jpg'},
-            {"title": "Let's Play - Anirudh Ravichander - Tamil", "token": 'ePUVUJs1h,E_', "image": 'https://c.saavncdn.com/editorial/Let_sPlayAnirudhRavichanderTamil_20250217095503_500x500.jpg'},
-            {"title": 'Top Kuthu - Tamil', "token": 'CNVzQf7lvT8wkg5tVhI3fw__', "image": 'https://c.saavncdn.com/editorial/TopKuthuTamil_20260422094846_500x500.jpg'},
-            {"title": "Let's Play - Rajinikanth", "token": 'hVwUe6exUYM_', "image": 'https://c.saavncdn.com/editorial/Let_sPlayRajinikanth_20250218065230_500x500.jpg'},
-            {"title": 'MGR Philosophical Songs - Tamil', "token": 'DWnFgpgW3PwGSw2I1RxdhQ__', "image": 'https://c.saavncdn.com/editorial/MGRPhilosophicalSongsTamil_20251209063307_500x500.jpg'},
-            {"title": "Let's Play - Pradeep Ranganathan", "token": 'pfqtqaCDk6apJ,OEBt5Zbg__', "image": 'https://c.saavncdn.com/editorial/Let_sPlayPradeepRanganathan_20260403085039_500x500.jpg'},
-            {"title": "Let's Play - A.R. Rahman", "token": '9qHvXYY4r,JFo9wdEAzFBA__', "image": 'https://c.saavncdn.com/editorial/Let_sPlayA-R-Rahman_20231218061538_500x500.jpg'},
-            {"title": 'Tamil Hit Songs', "token": 'QbD85KAEmtcZmWp1Op3nVA__', "image": 'https://c.saavncdn.com/editorial/TamilHitSongs_20250217095444_500x500.jpg'},
-            {"title": 'Iravaaga Nee', "token": '5NTonN-oTdpuOxiEGmm6lQ__', "image": 'https://c.saavncdn.com/editorial/IravaagaNee_20260302042438_500x500.jpg'},
-            {"title": 'Dance in Love - Tamil', "token": 'Le-woPWglF1ieSJqt9HmOQ__', "image": 'https://c.saavncdn.com/editorial/DanceinLoveTamil_20260305071023_500x500.jpg'},
-            {"title": 'Mazhai Melodies', "token": 'nCKY99zWUMQ_', "image": 'https://c.saavncdn.com/editorial/MazhaiMelodies_20251201153855_500x500.jpg'},
-            {"title": "Let's Play - Sai Abhyankkar", "token": 'At02y,UCrb,QbUI04mhbCA__', "image": 'https://c.saavncdn.com/editorial/Let_sPlaySaiAbhyankkar_20251028120032_500x500.jpg'},
-            {"title": "Let's Play - Sivakarthikeyan", "token": 'Ml,4H8ou2pM_', "image": 'https://c.saavncdn.com/editorial/Let_sPlaySivakarthikeyan_20250211135435_500x500.jpg'},
-            {"title": "Let's Play - Suriya", "token": 'VvbhxbsrhEg_', "image": 'https://c.saavncdn.com/editorial/Let_sPlaySuriya_20250217095552_500x500.jpg'},
-            {"title": 'Manam Virumbum Melody', "token": 'JLxZmGNZvU4_', "image": 'https://c.saavncdn.com/editorial/ManamVirumbumMelody_20260105090923_500x500.jpg'},
-            {"title": 'Trending POP - Tamil', "token": '5z8vKjNnhmIGSw2I1RxdhQ__', "image": 'https://c.saavncdn.com/editorial/TrendingPOPTamil_20260422094931_500x500.jpg'},
-            {"title": 'Motivational Hits - Tamil', "token": 'jMHINeLYW1eO0eMLZZxqsA__', "image": 'https://c.saavncdn.com/editorial/MotivationalHitsTamil_20251126081151_500x500.jpg'},
-            {"title": 'Pudhu Jodi', "token": 'K2ClpzkOqzTfemJ68FuXsA__', "image": 'https://c.saavncdn.com/editorial/PudhuJodi_20260225035907_500x500.jpg'},
-            {"title": 'Chartbusters 2024 - Tamil', "token": 'AeFkwBP3WxIrMQGDkCmGvg__', "image": 'https://c.saavncdn.com/editorial/Chartbusters2024Tamil_20241205112832_500x500.jpg'},
-            {"title": 'Anirudh Ravichander - Party Songs - Tamil', "token": 'TUXyju4uMac_', "image": 'https://c.saavncdn.com/editorial/AnirudhDanceSongsTamil_20240213054952_500x500.jpg'},
-            {"title": "Let's Play - Ajith Kumar", "token": 'oAj,lBFGWbU_', "image": 'https://c.saavncdn.com/editorial/Let_sPlayAjithKumar_20250310083422_500x500.jpg'},
-            {"title": 'Mann Vasanai - Tamil', "token": 'FSoXzFcf8jMGSw2I1RxdhQ__', "image": 'https://c.saavncdn.com/editorial/MannVasanaiTamil_20260225035901_500x500.jpg'},
-            {"title": 'Mazhai Dance', "token": 'c5gIC3jvDZZuOxiEGmm6lQ__', "image": 'https://c.saavncdn.com/editorial/MazhaiDance_20260225035856_500x500.jpg'},
-            {"title": 'A.R. Rahman - Party Songs - Tamil', "token": 'GbtG0AkkczPfemJ68FuXsA__', "image": 'https://c.saavncdn.com/editorial/A-R-RahmanDanceSongsTamil_20240213060615_500x500.jpg'},
-            {"title": 'Dance Queens - Tamil', "token": '2uwAUQjOVlnfemJ68FuXsA__', "image": 'https://c.saavncdn.com/editorial/DanceQueensTamil_20251209063316_500x500.jpg'},
-        ]
-        
-        # Display in 4 columns
-        rows = [playlists_data[i:i+4] for i in range(0, len(playlists_data), 4)]
-        for row_idx, row in enumerate(rows):
-            cols = st.columns(4)
-            for col, p in zip(cols, row):
-                with col:
-                    st.markdown(f"""
-                    <div class="album-card">
-                        <img class="album-image" src="{get_image_base64_uri(p['image'])}" alt="{p['title']}">
-                        <div class="album-title">{p['title']}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    if st.button("Open Playlist", key=f"playlist_btn_{p['token']}_{row_idx}", use_container_width=True):
-                        with st.spinner(f"Loading {p['title']}..."):
-                            st.session_state.search_results = music_manager.get_playlist_tracks(p['token'])
-                            st.session_state.results_title = p['title']
-                            st.session_state.active_view = "Search Results"
-                            st.rerun()
+
 
 
 
