@@ -5,11 +5,15 @@ import music_manager
 import streamlit.components.v1 as components
 import base64
 import requests
+from concurrent.futures import ThreadPoolExecutor
 
 # Force reload of music_manager to pick up updates without server restart
 importlib.reload(music_manager)
 
-@st.cache_data(show_spinner=False, ttl=1800, max_entries=50)
+# High-contrast, clean fallback SVG thumbnail for tracks when images cannot be fetched
+FALLBACK_THUMBNAIL_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'><rect width='150' height='150' rx='8' fill='%23111827'/><text x='50%' y='50%' font-size='42' dominant-baseline='middle' text-anchor='middle' fill='%2300d2c4'>🎵</text></svg>"
+
+@st.cache_data(show_spinner=False, ttl=3600, max_entries=60)
 def get_media_bytes(url):
     """Fetch media content (audio) in the backend to bypass client-side Fortinet blocks."""
     if not url:
@@ -18,30 +22,42 @@ def get_media_bytes(url):
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
-        res = requests.get(url, headers=headers, timeout=15)
+        res = requests.get(url, headers=headers, timeout=12)
         if res.status_code == 200:
             return res.content
     except Exception as e:
         print(f"[Backend Proxy] Error fetching media: {e}")
     return None
 
-@st.cache_data(show_spinner=False, ttl=1800, max_entries=100)
+@st.cache_data(show_spinner=False, ttl=7200, max_entries=300)
 def get_image_base64_uri(url):
     """Fetch image in the backend and convert to base64 Data URI to bypass Fortinet blocks."""
     if not url:
-        return ""
+        return FALLBACK_THUMBNAIL_SVG
     try:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
-        res = requests.get(url, headers=headers, timeout=10)
+        res = requests.get(url, headers=headers, timeout=3.5)
         if res.status_code == 200:
             encoded = base64.b64encode(res.content).decode("utf-8")
             content_type = res.headers.get("Content-Type", "image/jpeg")
             return f"data:{content_type};base64,{encoded}"
     except Exception as e:
         print(f"[Backend Proxy] Error base64-encoding image: {e}")
-    return url  # Fallback to original URL
+    return FALLBACK_THUMBNAIL_SVG
+
+@st.cache_data(show_spinner=False, ttl=3600)
+def get_cached_trending_songs(query, limit=12):
+    """Globally cache trending song searches for 1 hour so initial load is instant."""
+    songs = music_manager.search_songs(query, limit=limit)
+    if songs:
+        try:
+            with ThreadPoolExecutor(max_workers=6) as executor:
+                list(executor.map(get_image_base64_uri, [s["thumbnail"] for s in songs if s.get("thumbnail")]))
+        except Exception as e:
+            print(f"[Backend Proxy] ThreadPool prefetch error: {e}")
+    return songs
 
 # Page configurations
 st.set_page_config(
@@ -338,22 +354,18 @@ with col_main:
         tabs = st.tabs(tab_names)
         
         queries = {
-            "Tamil 🌟": {"query": "latest tamil hit songs", "key": "trending_tamil"},
-            "Hindi": {"query": "latest hindi hit songs", "key": "trending_hindi"},
-            "Malayalam": {"query": "latest malayalam hit songs", "key": "trending_malayalam"},
-            "Telugu": {"query": "latest telugu hit songs", "key": "trending_telugu"},
-            "Trending Now": {"query": "latest trending songs", "key": "trending_now"}
+            "Tamil 🌟": "latest tamil hit songs",
+            "Hindi": "latest hindi hit songs",
+            "Malayalam": "latest malayalam hit songs",
+            "Telugu": "latest telugu hit songs",
+            "Trending Now": "latest trending songs"
         }
         
         for tab, tab_name in zip(tabs, tab_names):
             with tab:
-                config = queries[tab_name]
-                cache_key = config["key"]
-                if cache_key not in st.session_state:
-                    with st.spinner(f"Fetching {tab_name} tracks..."):
-                        st.session_state[cache_key] = music_manager.search_songs(config["query"], limit=20)
+                query_str = queries[tab_name]
+                tracks = get_cached_trending_songs(query_str, limit=12)
                 
-                tracks = st.session_state[cache_key]
                 if not tracks:
                     st.info(f"No tracks found for {tab_name}.")
                 else:
@@ -363,10 +375,10 @@ with col_main:
                         col_det.markdown(f"<b>{track['title']}</b><br><span style='color:#9ca3af; font-size:0.85rem;'>{track['artist']} &nbsp;|&nbsp; {track['album']}</span>", unsafe_allow_html=True)
                         
                         c_play, c_queue = col_act.columns(2)
-                        if c_play.button("▶️ Play", key=f"trend_play_{cache_key}_{track['track_id']}"):
+                        if c_play.button("▶️ Play", key=f"trend_play_{tab_name}_{track['track_id']}"):
                             play_track(track)
                             st.rerun()
-                        if c_queue.button("➕ Queue", key=f"trend_q_{cache_key}_{track['track_id']}"):
+                        if c_queue.button("➕ Queue", key=f"trend_q_{tab_name}_{track['track_id']}"):
                             add_to_queue(track)
                             st.rerun()
 
@@ -456,38 +468,46 @@ with col_player:
                 components.html(f"""
                 <script>
                     function setupAutoNext() {{
-                        const parentDoc = window.parent.document;
-                        
-                        function getTriggerBtn() {{
-                            const buttons = parentDoc.querySelectorAll('button');
-                            for (const btn of buttons) {{
-                                if (btn.textContent.includes('AutoNextTrigger')) {{
-                                    return btn;
+                        try {{
+                            const parentDoc = window.parent.document;
+                            
+                            function getTriggerBtn() {{
+                                const buttons = parentDoc.querySelectorAll('button');
+                                for (const btn of buttons) {{
+                                    if (btn.textContent.includes('AutoNextTrigger')) {{
+                                        return btn;
+                                    }}
                                 }}
+                                return null;
                             }}
-                            return null;
+                            
+                            // Repeatedly check for audio elements and bind onended
+                            const intervalId = setInterval(() => {{
+                                try {{
+                                    const triggerBtn = getTriggerBtn();
+                                    const audios = parentDoc.querySelectorAll('audio');
+                                    if (audios.length > 0 && triggerBtn) {{
+                                        const audio = audios[audios.length - 1];
+                                        // Prevent multiple bindings
+                                        if (!audio.dataset.onendedBound) {{
+                                            audio.onended = function() {{
+                                                console.log("[AutoNext] Audio completed. Clicking trigger button.");
+                                                triggerBtn.click();
+                                            }};
+                                            audio.dataset.onendedBound = "true";
+                                            console.log("[AutoNext] Bound onended event successfully.");
+                                        }}
+                                    }}
+                                }} catch (pollErr) {{
+                                    // Ignored inside polling
+                                }}
+                            }}, 500);
+                            
+                            // Clean up interval on page unload
+                            window.addEventListener('unload', () => clearInterval(intervalId));
+                        }} catch (e) {{
+                            console.warn("[AutoNext] Sandbox prevented accessing parent document:", e);
                         }}
-                        
-                        // Repeatedly check for audio elements and bind onended
-                        const intervalId = setInterval(() => {{
-                            const triggerBtn = getTriggerBtn();
-                            const audios = parentDoc.querySelectorAll('audio');
-                            if (audios.length > 0 && triggerBtn) {{
-                                const audio = audios[audios.length - 1];
-                                // Prevent multiple bindings
-                                if (!audio.dataset.onendedBound) {{
-                                    audio.onended = function() {{
-                                        console.log("[AutoNext] Audio completed. Clicking trigger button.");
-                                        triggerBtn.click();
-                                    }};
-                                    audio.dataset.onendedBound = "true";
-                                    console.log("[AutoNext] Bound onended event successfully.");
-                                }}
-                            }}
-                        }}, 500);
-                        
-                        // Clean up interval on page unload
-                        window.addEventListener('unload', () => clearInterval(intervalId));
                     }}
                     setupAutoNext();
                 </script>

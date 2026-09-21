@@ -46,10 +46,10 @@ def search_songs(query, limit=15):
             if not album:
                 album = "Single"
                 
-            # Fetch high-quality thumbnail (prefer 500x500, then 150x150, then 50x50)
+            # Fetch thumbnail (prefer 150x150 for fast loading and proxy compatibility)
             thumbnails_data = r.get("thumbnails", {})
             quality_data = thumbnails_data.get("quality", {}) if isinstance(thumbnails_data, dict) else {}
-            thumb_url = quality_data.get("500x500") or quality_data.get("150x150") or quality_data.get("50x50") or ""
+            thumb_url = quality_data.get("150x150") or quality_data.get("500x500") or quality_data.get("50x50") or ""
             
             # Fetch stream URL (prefer very_high_quality 320kbps, down to low_quality)
             stream_urls_data = r.get("stream_urls", {})
