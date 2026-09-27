@@ -396,7 +396,7 @@ function updateQueueUI() {
     elements.modalQueueList.innerHTML = state.queue.map((t, idx) => `
       <div class="queue-modal-item">
         <span style="color: var(--accent); font-weight: 700; width: 20px;">${idx + 1}</span>
-        <img class="queue-modal-art" src="${t.thumbnail || FALLBACK_THUMB}" alt="Thumb" onerror="this.src='${FALLBACK_THUMB}'">
+        <img class="queue-modal-art" src="${t.thumbnail || FALLBACK_THUMB}" alt="Thumb" onerror="if(!this._p && this.src.startsWith('http')){this._p=true;this.src='/api/proxy-image?url='+encodeURIComponent(this.src);}else{this.src='${FALLBACK_THUMB}';}">
         <div class="queue-modal-meta">
           <div class="queue-modal-title">${escapeHtml(t.title)}</div>
           <div class="queue-modal-artist">${escapeHtml(t.artist)}</div>
@@ -432,7 +432,7 @@ function renderTrackGrid(tracks) {
 
     card.innerHTML = `
       <div class="card-img-wrap">
-        <img src="${track.thumbnail || FALLBACK_THUMB}" alt="${escapeHtml(track.title)}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'">
+        <img src="${track.thumbnail || FALLBACK_THUMB}" alt="${escapeHtml(track.title)}" loading="lazy" onerror="if(!this._p && this.src.startsWith('http')){this._p=true;this.src='/api/proxy-image?url='+encodeURIComponent(this.src);}else{this.src='${FALLBACK_THUMB}';}">
         <button class="card-overlay-btn" title="Play">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
         </button>
@@ -477,7 +477,7 @@ function renderSearchResults(tracks, query) {
     const row = document.createElement("div");
     row.className = "track-row";
     row.innerHTML = `
-      <img class="track-row-art" src="${track.thumbnail || FALLBACK_THUMB}" alt="Thumb" onerror="this.src='${FALLBACK_THUMB}'">
+      <img class="track-row-art" src="${track.thumbnail || FALLBACK_THUMB}" alt="Thumb" onerror="if(!this._p && this.src.startsWith('http')){this._p=true;this.src='/api/proxy-image?url='+encodeURIComponent(this.src);}else{this.src='${FALLBACK_THUMB}';}">
       <div class="track-row-meta">
         <div class="track-row-title">${escapeHtml(track.title)}</div>
         <div class="track-row-artist">${escapeHtml(track.artist)}</div>

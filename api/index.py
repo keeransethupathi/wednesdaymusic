@@ -141,7 +141,7 @@ def get_song_lyrics(track_id: str = Query(...)):
 def proxy_audio(request: Request, url: str = Query(...)):
     """
     Stream audio directly through the backend serverless proxy.
-    This resolves CORS issues, corporate firewall blocks (e.g. Fortinet), and enables Range requests for seeking.
+    Resolves CORS issues, 403 Forbidden hotlink blocks, corporate firewalls (e.g. Fortinet), and enables Range requests for seeking.
     """
     if not url or not url.startswith("http"):
         raise HTTPException(status_code=400, detail="Invalid audio URL")
@@ -158,6 +158,16 @@ def proxy_audio(request: Request, url: str = Query(...)):
 
     try:
         upstream = requests.get(url, headers=headers, stream=True, timeout=15)
+        
+        # Bypass 403 Forbidden hotlink restriction if triggered
+        if upstream.status_code in [403, 401]:
+            alt_headers = {
+                "User-Agent": "JioSaavn/6.1.0 Android/10",
+                "Accept": "*/*"
+            }
+            if range_header:
+                alt_headers["Range"] = range_header
+            upstream = requests.get(url, headers=alt_headers, stream=True, timeout=15)
         
         # Prepare response headers
         response_headers = {
@@ -186,6 +196,38 @@ def proxy_audio(request: Request, url: str = Query(...)):
     except Exception as e:
         print(f"[API Proxy] Failed to stream audio: {e}")
         raise HTTPException(status_code=502, detail="Failed to stream audio from source")
+
+@app.get("/api/proxy-image")
+@app.get("/proxy-image")
+def proxy_image(url: str = Query(...)):
+    """
+    Proxy thumbnail images through backend to bypass 403 Forbidden hotlink prevention or corporate firewalls.
+    """
+    if not url or not url.startswith("http"):
+        raise HTTPException(status_code=400, detail="Invalid image URL")
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Referer": "https://www.jiosaavn.com/"
+    }
+
+    try:
+        res = requests.get(url, headers=headers, timeout=10)
+        if res.status_code in [403, 401]:
+            # Fallback retry without referer
+            res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+            
+        if res.status_code == 200:
+            return Response(
+                content=res.content,
+                media_type=res.headers.get("Content-Type", "image/jpeg"),
+                headers={"Cache-Control": "public, max-age=604800"}
+            )
+    except Exception as e:
+        print(f"[Proxy Image Error] {e}")
+
+    raise HTTPException(status_code=502, detail="Failed to fetch image")
+
 
 # Mount static files when running locally (not on Vercel deployment)
 if os.environ.get("VERCEL") != "1":
