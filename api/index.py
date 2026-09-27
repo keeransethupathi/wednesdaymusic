@@ -6,17 +6,17 @@ from fastapi import FastAPI, Query, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 
-# Add parent directory to path so music_manager can be imported cleanly
+# Add api directory and parent directory to path so music_manager can be imported cleanly
+sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 try:
     import music_manager
 except ImportError:
-    # If deployed inside vercel where api is root
     try:
         from . import music_manager
-    except ImportError:
-        import music_manager
+    except Exception as e:
+        print(f"Import error: {e}")
 
 app = FastAPI(title="Wednesday Songs API", version="2.0.0")
 
