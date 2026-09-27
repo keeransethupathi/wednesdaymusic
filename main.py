@@ -1,18 +1,18 @@
-import subprocess
 import sys
+import uvicorn
 
 if __name__ == "__main__":
     print("==============================================")
-    print("Launching Wednesday Songs App in Streamlit...")
+    print("  Launching Wednesday Songs (Vercel Edition)  ")
+    print("==============================================")
+    print("Local URL: http://localhost:3000")
+    print("Press Ctrl+C to stop.")
     print("==============================================")
     
     try:
-        # Launch Streamlit server using the virtual environment's executable
-        subprocess.run([r".venv\Scripts\streamlit", "run", "app.py"], check=True)
+        uvicorn.run("api.index:app", host="0.0.0.0", port=3000, reload=True)
     except KeyboardInterrupt:
-        print("\n[System] Music Application stopped by user.")
-    except FileNotFoundError:
-        print("\nError: Streamlit command-line tool not found.")
-        print("Please ensure your Python dependencies are installed using:")
-        print("    pip install -r requirements.txt")
+        print("\n[System] Wednesday Songs server stopped.")
+    except Exception as e:
+        print(f"\n[System] Error launching server: {e}")
         sys.exit(1)

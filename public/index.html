@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wednesday Songs - High-Fidelity Music Streaming</title>
+  <meta name="description" content="Stream high-quality music in Tamil, Hindi, Malayalam, Telugu, and international hits with real-time lyrics, queue management, and audio visualizer.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-layout" id="app-layout">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <span class="brand-icon">🎵</span>
+          <span class="brand-text">Wednesday <span class="brand-accent">Songs</span></span>
+        </div>
+      </div>
+
+      <div class="search-section">
+        <label for="search-input" class="visually-hidden">Search Catalog</label>
+        <div class="search-box">
+          <input type="text" id="search-input" placeholder="Search songs, artists..." autocomplete="off">
+          <button id="search-btn" class="search-submit-btn" aria-label="Search">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-group-title">EXPLORE</div>
+        <button class="nav-item active" id="nav-home">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          <span>Home Dashboard</span>
+        </button>
+        <button class="nav-item" id="nav-search-results">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <span>Search Results</span>
+        </button>
+      </nav>
+
+      <!-- Sidebar Quick Queue Preview -->
+      <div class="sidebar-queue-card" id="sidebar-queue-card">
+        <div class="queue-card-header">
+          <span class="queue-title">UP NEXT</span>
+          <span class="queue-count-badge" id="sidebar-queue-count">0</span>
+        </div>
+        <div class="sidebar-queue-list" id="sidebar-queue-list">
+          <p class="empty-hint">Queue is empty</p>
+        </div>
+        <button class="clear-queue-btn" id="sidebar-clear-queue" style="display: none;">Clear Queue</button>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="shortcut-tip">
+          <kbd>Space</kbd> Play/Pause &bull; <kbd>N</kbd> Next
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="main-content">
+      
+      <!-- Top Bar Greeting & Status -->
+      <header class="top-bar">
+        <div class="welcome-heading">
+          <h1 id="greeting-title">Good Evening</h1>
+          <p class="welcome-subtitle">Stream unlimited high-bitrate tracks</p>
+        </div>
+        <div class="top-bar-actions">
+          <button class="header-action-btn" id="btn-toggle-lyrics" title="Open Lyrics (L)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path><polyline points="10 8 16 8"></polyline><polyline points="10 12 14 12"></polyline></svg>
+            <span>Lyrics</span>
+          </button>
+          <button class="header-action-btn" id="btn-toggle-queue" title="Open Queue (Q)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+            <span class="queue-btn-label">Queue</span>
+            <span class="queue-badge" id="top-queue-badge">0</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- View: Home View -->
+      <section class="view-container active" id="view-home">
+        
+        <!-- Hero Featured Banner -->
+        <div class="hero-banner">
+          <div class="hero-content">
+            <span class="hero-tag">FEATURED COLLECTION</span>
+            <h2 class="hero-title">Experience Pure 320kbps Audio</h2>
+            <p class="hero-desc">Discover the freshest releases and all-time favorites across Tamil, Hindi, Malayalam, and Telugu.</p>
+            <div class="hero-buttons">
+              <button class="primary-btn" id="btn-quick-play-featured">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span>Play Trending</span>
+              </button>
+            </div>
+          </div>
+          <div class="hero-visual">
+            <div class="pulsing-disc-hero">
+              <div class="disc-inner-ring">🎵</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trending Tabs -->
+        <div class="section-header">
+          <h2 class="section-title">Trending Tracks</h2>
+          <div class="genre-tabs" id="genre-tabs" role="tablist">
+            <button class="tab-btn active" data-tab="tamil" role="tab">Tamil 🌟</button>
+            <button class="tab-btn" data-tab="hindi" role="tab">Hindi</button>
+            <button class="tab-btn" data-tab="malayalam" role="tab">Malayalam</button>
+            <button class="tab-btn" data-tab="telugu" role="tab">Telugu</button>
+            <button class="tab-btn" data-tab="trending" role="tab">Trending Now 🔥</button>
+          </div>
+        </div>
+
+        <!-- Track Grid -->
+        <div class="track-grid" id="trending-grid">
+          <!-- Dynamic cards injected via JavaScript -->
+          <div class="skeleton-loader">
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- View: Search Results -->
+      <section class="view-container" id="view-search">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title" id="search-title">Search Results</h2>
+            <p class="section-subtitle" id="search-count-label">Showing results</p>
+          </div>
+        </div>
+        <div class="track-list" id="search-results-list">
+          <!-- Injected via JavaScript -->
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Right Side Panel: Now Playing Spotlight -->
+    <aside class="now-playing-panel" id="now-playing-panel">
+      <div class="panel-header">
+        <span class="panel-title">NOW PLAYING</span>
+        <div class="live-eq" id="side-live-eq">
+          <span class="eq-bar"></span>
+          <span class="eq-bar"></span>
+          <span class="eq-bar"></span>
+          <span class="eq-bar"></span>
+        </div>
+      </div>
+
+      <div class="spotlight-body" id="spotlight-body">
+        <div class="spotlight-empty" id="spotlight-empty">
+          <div class="empty-disc-icon">💿</div>
+          <h3>No Song Playing</h3>
+          <p>Pick a track from the catalog to start streaming high-fidelity audio.</p>
+        </div>
+
+        <div class="spotlight-active" id="spotlight-active" style="display: none;">
+          <div class="spotlight-art-wrapper">
+            <img id="spotlight-art" src="" alt="Album Artwork" class="spotlight-art">
+            <div class="spotlight-glow" id="spotlight-glow"></div>
+          </div>
+          <div class="spotlight-meta">
+            <h3 class="spotlight-track-title" id="spotlight-title">-</h3>
+            <p class="spotlight-track-artist" id="spotlight-artist">-</p>
+            <p class="spotlight-track-album" id="spotlight-album">-</p>
+          </div>
+
+          <!-- Pulsing Audio Visualizer -->
+          <div class="visualizer-container">
+            <div class="pulse-disc" id="pulse-disc"></div>
+          </div>
+
+          <!-- Quick Lyrics Snippet -->
+          <div class="spotlight-lyrics-card">
+            <div class="lyrics-card-head">
+              <span>Lyrics</span>
+              <button class="text-btn" id="btn-open-full-lyrics">Expand</button>
+            </div>
+            <div class="spotlight-lyrics-snippet" id="spotlight-lyrics-snippet">
+              Click to view lyrics...
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Persistent Bottom Player Dock -->
+  <footer class="player-dock" id="player-dock">
+    <!-- Left: Track Info -->
+    <div class="dock-track-info">
+      <div class="dock-art-container">
+        <img id="dock-thumb" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' fill='%23111827'><rect width='60' height='60' rx='6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='20' fill='%2300d2c4'>🎵</text></svg>" alt="Artwork">
+      </div>
+      <div class="dock-track-text">
+        <div class="dock-title" id="dock-title">No Track Selected</div>
+        <div class="dock-artist" id="dock-artist">Select a song to play</div>
+      </div>
+    </div>
+
+    <!-- Center: Playback Controls & Progress Bar -->
+    <div class="dock-center-controls">
+      <div class="playback-buttons">
+        <button class="ctrl-btn" id="btn-shuffle" title="Shuffle (S)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"></path><path d="M4 20L21 3"></path><path d="M21 16v5h-5"></path><path d="M15 15l6 6"></path><path d="M4 4l5 5"></path></svg>
+        </button>
+        <button class="ctrl-btn" id="btn-prev" title="Previous (P)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.5"></line></svg>
+        </button>
+        <button class="play-pause-btn" id="btn-play-pause" title="Play/Pause (Space)">
+          <svg id="icon-play" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <svg id="icon-pause" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="display: none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+        </button>
+        <button class="ctrl-btn" id="btn-next" title="Next (N)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"></line></svg>
+        </button>
+        <button class="ctrl-btn" id="btn-repeat" title="Repeat (R)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 1 4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="m7 23-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+        </button>
+      </div>
+
+      <div class="progress-bar-container">
+        <span class="time-label" id="current-time">0:00</span>
+        <div class="seek-bar-track" id="seek-track">
+          <div class="seek-bar-fill" id="seek-fill"></div>
+          <div class="seek-handle" id="seek-handle"></div>
+        </div>
+        <span class="time-label" id="total-time">0:00</span>
+      </div>
+    </div>
+
+    <!-- Right: Volume & Extra Actions -->
+    <div class="dock-right-actions">
+      <button class="ctrl-btn" id="btn-dock-lyrics" title="Lyrics">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path><polyline points="10 8 16 8"></polyline><polyline points="10 12 14 12"></polyline></svg>
+      </button>
+      <button class="ctrl-btn" id="btn-dock-queue" title="Queue">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+      </button>
+      <div class="volume-container">
+        <button class="ctrl-btn" id="btn-volume-icon" title="Mute/Unmute (M)">
+          <svg id="icon-vol-high" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+          <svg id="icon-vol-mute" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;"><line x1="1" y1="1" x2="23" y2="23"></line><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon></svg>
+        </button>
+        <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.85" class="volume-slider" aria-label="Volume">
+      </div>
+    </div>
+  </footer>
+
+  <!-- Lyrics Modal Overlay -->
+  <div class="modal-overlay" id="lyrics-modal" style="display: none;">
+    <div class="modal-content lyrics-modal-content">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title" id="lyrics-modal-title">Song Lyrics</h2>
+          <p class="modal-subtitle" id="lyrics-modal-subtitle">-</p>
+        </div>
+        <button class="modal-close-btn" id="btn-close-lyrics" aria-label="Close Lyrics">&times;</button>
+      </div>
+      <div class="lyrics-scroll-body" id="lyrics-body">
+        <div class="spinner-container">
+          <div class="spinner"></div>
+          <p>Loading lyrics...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Queue Drawer Modal Overlay -->
+  <div class="modal-overlay" id="queue-modal" style="display: none;">
+    <div class="modal-content queue-modal-content">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title">Play Queue</h2>
+          <p class="modal-subtitle" id="queue-modal-count">0 songs up next</p>
+        </div>
+        <div class="modal-header-actions">
+          <button class="text-btn danger" id="btn-clear-modal-queue">Clear All</button>
+          <button class="modal-close-btn" id="btn-close-queue" aria-label="Close Queue">&times;</button>
+        </div>
+      </div>
+      <div class="queue-scroll-body" id="modal-queue-list">
+        <p class="empty-hint">Queue is currently empty. Add tracks to play next!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- HTML5 Audio Element for stream playback -->
+  <audio id="audio-engine" preload="auto"></audio>
+
+  <script src="app.js"></script>
+</body>
+</html>
