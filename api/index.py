@@ -20,6 +20,31 @@ except ImportError:
 
 app = FastAPI(title="Wednesday Songs API", version="2.0.0")
 
+@app.middleware("http")
+async def vercel_routing_middleware(request: Request, call_next):
+    raw_path = request.scope.get("path", "")
+    matched_path = request.headers.get("x-matched-path")
+    query_path = request.query_params.get("__path__")
+
+    target_path = None
+    if matched_path:
+        target_path = matched_path
+    elif query_path:
+        target_path = query_path if query_path.startswith("/") else f"/api/{query_path}"
+    elif raw_path.startswith("/api/index.py"):
+        sub = raw_path[len("/api/index.py"):]
+        target_path = sub if sub else "/"
+    elif raw_path.startswith("/api/index"):
+        sub = raw_path[len("/api/index"):]
+        target_path = sub if sub else "/"
+
+    if target_path:
+        if not target_path.startswith("/"):
+            target_path = "/" + target_path
+        request.scope["path"] = target_path
+
+    return await call_next(request)
+
 # Enable CORS for frontend requests
 app.add_middleware(
     CORSMiddleware,
@@ -28,6 +53,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # In-memory TTL cache for quick catalog responses
 CACHE = {}
