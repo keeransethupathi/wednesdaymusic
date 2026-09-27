@@ -54,10 +54,14 @@ TRENDING_QUERIES = {
 }
 
 @app.get("/api/health")
+@app.get("/health")
+@app.get("/api")
+@app.get("/")
 def health_check():
     return {"status": "ok", "service": "Wednesday Songs API", "platform": "Vercel"}
 
 @app.get("/api/search")
+@app.get("/search")
 def search_songs(q: str = Query(..., min_length=1), limit: int = Query(15, ge=1, le=50)):
     cache_key = f"search:{q.strip().lower()}:{limit}"
     cached = get_cached(cache_key)
@@ -73,6 +77,7 @@ def search_songs(q: str = Query(..., min_length=1), limit: int = Query(15, ge=1,
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/trending")
+@app.get("/trending")
 def get_trending(tab: str = Query("tamil"), limit: int = Query(12, ge=1, le=30)):
     tab_lower = tab.lower()
     query_str = TRENDING_QUERIES.get(tab_lower, TRENDING_QUERIES["trending"])
@@ -90,6 +95,7 @@ def get_trending(tab: str = Query("tamil"), limit: int = Query(12, ge=1, le=30))
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/lyrics")
+@app.get("/lyrics")
 def get_song_lyrics(track_id: str = Query(...)):
     cache_key = f"lyrics:{track_id}"
     cached = get_cached(cache_key)
@@ -105,6 +111,7 @@ def get_song_lyrics(track_id: str = Query(...)):
         raise HTTPException(status_code=500, detail="Failed to fetch lyrics")
 
 @app.get("/api/proxy-audio")
+@app.get("/proxy-audio")
 def proxy_audio(request: Request, url: str = Query(...)):
     """
     Stream audio directly through the backend serverless proxy.
@@ -154,8 +161,10 @@ def proxy_audio(request: Request, url: str = Query(...)):
         print(f"[API Proxy] Failed to stream audio: {e}")
         raise HTTPException(status_code=502, detail="Failed to stream audio from source")
 
-# Mount static files when running locally or directly
-public_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "public"))
-if os.path.isdir(public_dir):
-    from fastapi.staticfiles import StaticFiles
-    app.mount("/", StaticFiles(directory=public_dir, html=True), name="static")
+# Mount static files when running locally (not on Vercel deployment)
+if os.environ.get("VERCEL") != "1":
+    public_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "public"))
+    if os.path.isdir(public_dir):
+        from fastapi.staticfiles import StaticFiles
+        app.mount("/", StaticFiles(directory=public_dir, html=True), name="static")
+
